@@ -37,9 +37,9 @@ import sphinx_rtd_theme
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.githubpages']
+              'sphinx.ext.doctest',
+              'sphinx.ext.mathjax',
+              'sphinx.ext.githubpages']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['APItemplates']
@@ -54,9 +54,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'pycasso'
-copyright = '2017, Haoming Jiang, Jason Ge'
-author = 'Haoming Jiang, Jason Ge'
+project = 'pycasso V2.0'
+copyright = '2022, YU-CHENG LO'
+author = 'YU-CHENG LO (Original author: Haoming Jiang, Jason Ge)'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

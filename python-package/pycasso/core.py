@@ -271,7 +271,7 @@ class Solver:
 
   def _sqrtlasso_wrapper(self):
     """
-        A wrapper for sqrt lasso, including some specialized parameter checks.
+         A wrapper for sqrt lasso, including some specialized parameter checks.
 
         :return: A function which can be used for training
         :rtype: function
