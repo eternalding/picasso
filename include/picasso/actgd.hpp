@@ -7,29 +7,29 @@
 #include <string>
 
 namespace picasso {
-namespace solver {
-class ActGDSolver {
- private:
-  PicassoSolverParams m_param;
-  ObjFunction *m_obj;
+    namespace solver {
+        class ActGDSolver {
+            private:
+                PicassoSolverParams m_param;
+                ObjFunction *m_obj;
 
-  std::vector<int> itercnt_path;
-  std::vector<ModelParam> solution_path;
+                std::vector<int> itercnt_path;
+                std::vector<ModelParam> solution_path;
 
- public:
-  ActGDSolver(ObjFunction *obj, PicassoSolverParams param);
+            public:
+                ActGDSolver(ObjFunction *obj, PicassoSolverParams param);
 
-  void solve();
+                void solve();
 
-  const std::vector<int> &get_itercnt_path() const { return itercnt_path; };
-  const ModelParam &get_model_param(int i) const { return solution_path[i]; };
+                const std::vector<int> &get_itercnt_path() const { return itercnt_path; };
+                const ModelParam &get_model_param(int i) const { return solution_path[i]; };
 
-  ~ActGDSolver() {
-    delete m_obj;
-    m_obj = nullptr;
-  }
-};
+                ~ActGDSolver() {
+                    delete m_obj;
+                    m_obj = nullptr;
+                }
+        };
 
-}  // namespace solver
+    }  // namespace solver
 }  // namespace picasso
 #endif

@@ -16,14 +16,15 @@ namespace picasso {
             model_param.intercept = avr_y;
         }
 
+        // Initialize XX
         for (int j = 0; j < d; j++)
             XX[j] = (X.col(j)*X.col(j)).sum()/n;
 
         r = Y;
         update_auxiliary();
 
-        // saturated fvalue = 0
-        deviance = fabs(eval());
+        // saturated fvalue = 0, MSE is guaranteed to be positive
+        deviance = eval();
     }
 
     double GaussianNaiveUpdateObjective::coordinate_descent(RegFunction *regfunc,
@@ -40,6 +41,8 @@ namespace picasso {
         double sum_r = r.sum();
         model_param.intercept = sum_r / n;
     }
+
+    //Update each dimension's gradient
     void GaussianNaiveUpdateObjective::update_auxiliary() {
         for (int idx = 0; idx < d; idx++)
             update_gradient(idx);
@@ -56,13 +59,13 @@ namespace picasso {
     }
 
     double GaussianNaiveUpdateObjective::eval() {
-        double v = 0.0;
+        double MSE = 0.0; // MSE
         for (int i = 0; i < n; i++) {
             double pred = model_param.intercept + model_param.beta.matrix().dot(X.row(i).matrix());
-            v += (Y[i] - pred) * (Y[i] - pred);
+            MSE += (Y[i] - pred) * (Y[i] - pred);
         }
-        v = v / n;
-        return v;
+        MSE /= n;
+        return MSE;
     }
 
 }  // namespace picasso
