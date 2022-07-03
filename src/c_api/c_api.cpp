@@ -26,38 +26,40 @@ void picasso_actnewton_solver(
     int *size_act,   // output: an array of solution sparsity (model df)
     double *runt     // output: runtime
 ) {
-  picasso::solver::PicassoSolverParams param;
-  param.set_lambdas(lambda, nlambda);
-  param.gamma = gamma;
-  if (reg_type == 1)
-    param.reg_type = picasso::solver::L1;
-  else if (reg_type == 2)
-    param.reg_type = picasso::solver::MCP;
-  else
-    param.reg_type = picasso::solver::SCAD;
+    picasso::solver::PicassoSolverParams param;
+    param.set_lambdas(lambda, nlambda);
+    param.gamma = gamma;
+    if (reg_type == 1)
+        param.reg_type = picasso::solver::L1;
+    else if (reg_type == 2)
+        param.reg_type = picasso::solver::MCP;
+    else if (reg_type == 3)
+        param.reg_type = picasso::solver::SCAD;
+    else
+        throw std::invalid_argument("Wrong regularization type specified!");
 
-  param.include_intercept = intercept;
-  param.prec = pprec;
-  param.max_iter = mmax_ite;
-  param.num_relaxation_round = 3;
+    param.include_intercept = intercept;
+    param.prec = pprec;
+    param.max_iter = mmax_ite;
+    param.num_relaxation_round = 3;
 
-  picasso::solver::ActNewtonSolver actnewton_solver(obj, param);
-  actnewton_solver.solve();
+    picasso::solver::ActNewtonSolver actnewton_solver(obj, param);
+    actnewton_solver.solve();
 
-  const std::vector<int> &itercnt_path = actnewton_solver.get_itercnt_path();
+    const std::vector<int> &itercnt_path = actnewton_solver.get_itercnt_path();
 
-  for (int i = 0; i < nlambda; i++) {
-    const picasso::ModelParam &model_param =
-        actnewton_solver.get_model_param(i);
-    ite_lamb[i] = itercnt_path[i];
-    size_act[i] = 0;
-    for (int j = 0; j < d; j++) {
-      beta[i * d + j] = model_param.beta[j];
-      if (fabs(beta[i * d + j]) > 1e-8) size_act[i]++;
+    for (int i = 0; i < nlambda; i++) {
+        const picasso::ModelParam &model_param =
+            actnewton_solver.get_model_param(i);
+        ite_lamb[i] = itercnt_path[i];
+        size_act[i] = 0;
+        for (int j = 0; j < d; j++) {
+            beta[i * d + j] = model_param.beta[j];
+            if (fabs(beta[i * d + j]) > 1e-8) size_act[i]++;
+        }
+        intcpt[i] = model_param.intercept;
+        runt[i] = 0.0;
     }
-    intcpt[i] = model_param.intercept;
-    runt[i] = 0.0;
-  }
 }
 
 void picasso_actgd_solver(
@@ -214,11 +216,11 @@ extern "C" void SolveLinearRegressionNaiveUpdate(
     int *size_act,   // output: an array of solution sparsity (model df)
     double *runt     // output: runtime
 ) {
-  picasso::ObjFunction *obj =
-      new picasso::GaussianNaiveUpdateObjective(X, Y, nn, dd, intercept);
-  picasso_actgd_solver(obj, Y, X, nn, dd, lambda, nnlambda, gamma, mmax_ite,
-                       pprec, reg_type, intercept, beta, intcpt, ite_lamb,
-                       size_act, runt);
+    picasso::ObjFunction *obj =
+        new picasso::GaussianNaiveUpdateObjective(X, Y, nn, dd, intercept);
+    picasso_actgd_solver(obj, Y, X, nn, dd, lambda, nnlambda, gamma, mmax_ite,
+                        pprec, reg_type, intercept, beta, intcpt, ite_lamb,
+                        size_act, runt);
 }
 
 extern "C" void SolveLinearRegressionCovUpdate(

@@ -9,262 +9,262 @@
 
 namespace picasso {
 
-class ModelParam {
- public:
-  int d;
-  Eigen::ArrayXd beta;
-  double intercept;
+    class ModelParam {
+        public:
+            int d;
+            Eigen::ArrayXd beta;
+            double intercept;
 
-  ModelParam(int dim) {
-    d = dim;
-    beta.resize(d);
-    beta.setZero();
-    intercept = 0.0;
-  }
-};
+        ModelParam(int dim) {
+            d = dim;
+            beta.resize(d);
+            beta.setZero();
+            intercept = 0.0;
+        }
+    };
 
-class RegFunction {
- public:
-  virtual double threshold(double x) = 0;
-  virtual void set_param(double lambda, double gamma) = 0;
-  virtual double get_lambda() = 0;
+    class RegFunction {
+    public:
+        virtual double threshold(double x) = 0;
+        virtual void set_param(double lambda, double gamma) = 0;
+        virtual double get_lambda() = 0;
 
-  virtual ~RegFunction(){};
+        virtual ~RegFunction(){};
 
-  double threshold_l1(double x, double thr) {
-    if (x > thr)
-      return x - thr;
-    else if (x < -thr)
-      return x + thr;
-    else
-      return 0;
-  }
-};
+        double threshold_l1(double x, double thr) {
+            if (x > thr)
+                return x - thr;
+            else if (x < -thr)
+                return x + thr;
+            else
+                return 0;
+        }
+    };
 
-class RegL1 : public RegFunction {
- private:
-  double m_lambda;
+    class RegL1 : public RegFunction {
+    private:
+        double m_lambda;
 
- public:
-  void set_param(double lambda, double gamma) { m_lambda = lambda; }
-  double get_lambda() { return m_lambda; };
-  double threshold(double x) { return threshold_l1(x, m_lambda); }
-};
+    public:
+        void set_param(double lambda, double gamma) { m_lambda = lambda; }
+        double get_lambda() { return m_lambda; };
+        double threshold(double x) { return threshold_l1(x, m_lambda); }
+    };
 
-class RegSCAD : public RegFunction {
- private:
-  double m_lambda;
-  double m_gamma;
+    class RegSCAD : public RegFunction {
+        private:
+            double m_lambda;
+            double m_gamma;
 
- public:
-  void set_param(double lambda, double gamma) {
-    m_lambda = lambda;
-    m_gamma = gamma;
-  };
-  double get_lambda() { return m_lambda; };
+        public:
+            void set_param(double lambda, double gamma) {
+                m_lambda = lambda;
+                m_gamma = gamma;
+            };
+            double get_lambda() { return m_lambda; };
 
-  double threshold(double x) {
-    if (fabs(x) > fabs(m_gamma * m_lambda)) {
-      return x;
-    } else {
-      if (fabs(x) > fabs(2 * m_lambda)) {
-        return threshold_l1(x, m_gamma * m_lambda / (m_gamma - 1)) /
-               (1 - 1 / (m_gamma - 1));
-      } else {
-        return threshold_l1(x, m_lambda);
-      }
-    }
-  };
-};
+            double threshold(double x) {
+                if (fabs(x) > fabs(m_gamma * m_lambda)) {
+                    return x;
+                } else {
+                    if (fabs(x) > fabs(2 * m_lambda)) {
+                    return threshold_l1(x, m_gamma * m_lambda / (m_gamma - 1)) /
+                            (1 - 1 / (m_gamma - 1));
+                    } else {
+                    return threshold_l1(x, m_lambda);
+                    }
+                }
+            };
+    };
 
-class RegMCP : public RegFunction {
- private:
-  double m_lambda;
-  double m_gamma;
+    class RegMCP : public RegFunction {
+        private:
+            double m_lambda;
+            double m_gamma;
 
- public:
-  void set_param(double lambda, double gamma) {
-    m_lambda = lambda;
-    m_gamma = gamma;
-  }
-  double get_lambda() { return m_lambda; };
+        public:
+            void set_param(double lambda, double gamma) {
+                m_lambda = lambda;
+                m_gamma = gamma;
+            }
+            double get_lambda() { return m_lambda; };
 
-  double threshold(double x) {
-    if (fabs(x) > fabs(m_gamma * m_lambda)) {
-      return x;
-    } else {
-      return threshold_l1(x, m_lambda)/(1-1/m_gamma);
-    }
-  }
-};
+            double threshold(double x) {
+                if (fabs(x) > fabs(m_gamma * m_lambda)) {
+                    return x;
+                } else {
+                    return threshold_l1(x, m_lambda)/(1-1/m_gamma);
+                }
+            }
+    };
 
-class ObjFunction {
- protected:
-  int n;  // sample number
-  int d;  // sample dimension
+    class ObjFunction {
+        protected:
+            int n;  // sample number
+            int d;  // sample dimension
 
-  Eigen::Map<const Eigen::ArrayXXd> X;
-  Eigen::Map<const Eigen::ArrayXd> Y;
+            Eigen::Map<const Eigen::ArrayXXd> X; // Mapping to an existing array: double, dynamic, dynamic
+            Eigen::Map<const Eigen::ArrayXd> Y;
 
-  Eigen::ArrayXd gr;
-  Eigen::ArrayXd Xb;
+            Eigen::ArrayXd gr; // Gradient
+            Eigen::ArrayXd Xb; // Bias
 
-  ModelParam model_param;
+            ModelParam model_param;
 
-  double deviance;
+            double deviance;
 
- public:
-  ObjFunction(const double *xmat, const double *y, int n, int d)
-      : X(xmat, n, d), Y(y, n), model_param(d) {
-    this->d = d;
-    this->n = n;
-    gr.resize(d);
+        public:
+            ObjFunction(const double *xmat, const double *y, int n, int d)
+                : X(xmat, n, d), Y(y, n), model_param(d) {
+                this->d = d;
+                this->n = n;
+                gr.resize(d);
 
-    Xb.resize(n);
-    Xb.setZero();
-  };
+                Xb.resize(n);
+                Xb.setZero();
+            };
 
-  int get_dim() { return d; }
-  int get_sample_num() { return n; }
+            int get_dim() { return d; }
+            int get_sample_num() { return n; }
 
-  double get_grad(int idx) { return gr[idx]; };
+            double get_grad(int idx) { return gr[idx]; };
 
-  // fabs(null fvalue - saturated fvalue)
-  double get_deviance() { return (deviance); };
+            // fabs(null fvalue - saturated fvalue)
+            double get_deviance() { return (deviance); };
 
-  double get_model_coef(int idx) {
-    return ((idx < 0) ? model_param.intercept : model_param.beta[idx]);
-  }
-  void set_model_coef(double value, int idx) {
-    if (idx >= 0)
-      model_param.beta[idx] = value;
-    else
-      model_param.intercept = value;
-  }
+            double get_model_coef(int idx) {
+                return ((idx < 0) ? model_param.intercept : model_param.beta[idx]);
+            }
+            void set_model_coef(double value, int idx) {
+                if (idx >= 0)
+                model_param.beta[idx] = value;
+                else
+                model_param.intercept = value;
+            }
 
-  ModelParam get_model_param() { return model_param; };
-  Eigen::ArrayXd get_model_Xb() const { return Xb; };
+            ModelParam get_model_param() { return model_param; };
+            Eigen::ArrayXd get_model_Xb() const { return Xb; };
 
-  const ModelParam &get_model_param_ref() { return model_param; };
-  const Eigen::ArrayXd &get_model_Xb_ref() const { return Xb; };
+            const ModelParam &get_model_param_ref() { return model_param; };
+            const Eigen::ArrayXd &get_model_Xb_ref() const { return Xb; };
 
-  // reset model param and also update related aux vars
-  void set_model_param(ModelParam &other_param) {
-    model_param.d = other_param.d;
-    model_param.beta = other_param.beta;
-    model_param.intercept = other_param.intercept;
-  };
+            // reset model param and also update related aux vars
+            void set_model_param(ModelParam &other_param) {
+                model_param.d = other_param.d;
+                model_param.beta = other_param.beta;
+                model_param.intercept = other_param.intercept;
+            };
 
-  void set_model_Xb(Eigen::ArrayXd &other_Xb) { Xb = other_Xb; };
+            void set_model_Xb(Eigen::ArrayXd &other_Xb) { Xb = other_Xb; };
 
-  // coordinate descent
-  virtual double coordinate_descent(RegFunction *regfun, int idx) = 0;
+            // coordinate descent
+            virtual double coordinate_descent(RegFunction *regfun, int idx) = 0;
 
-  // update intercept term
-  virtual void intercept_update() = 0;
+            // update intercept term
+            virtual void intercept_update() = 0;
 
-  // update gradient and other aux vars
-  virtual void update_auxiliary() = 0;
-  virtual void update_gradient(int idx){};
+            // update gradient and other aux vars
+            virtual void update_auxiliary() = 0;
+            virtual void update_gradient(int idx){};
 
-  // compute quadratic change of fvalue on the idx dimension
-  virtual double get_local_change(double old, int idx) = 0;
+            // compute quadratic change of fvalue on the idx dimension
+            virtual double get_local_change(double old, int idx) = 0;
 
-  // unpenalized function value
-  virtual double eval() = 0;
+            // unpenalized function value
+            virtual double eval() = 0;
 
-  virtual ~ObjFunction(){};
-};
+            virtual ~ObjFunction(){};
+    };
 
-class GLMObjective : public ObjFunction {
- protected:
-  Eigen::ArrayXd p, w, r;
+    class GLMObjective : public ObjFunction {
+        protected:
+            Eigen::ArrayXd p, w, r;
 
-  // wXX[j] = sum(w*X[j]*X[j])
-  Eigen::ArrayXd wXX;
+            // wXX[j] = sum(w*X[j]*X[j])
+            Eigen::ArrayXd wXX;
 
-  // quadratic approx coefs for each coordinate
-  // a*x^2 + g*x + constant
-  double a, g;
-  double sum_r;
-  double sum_w;
+            // quadratic approx coefs for each coordinate
+            // a*x^2 + g*x + constant
+            double a, g;
+            double sum_r;
+            double sum_w;
 
- public:
-  GLMObjective(const double *xmat, const double *y, int n, int d,
-               bool include_intercept = false);
+        public:
+            GLMObjective(const double *xmat, const double *y, int n, int d,
+                        bool include_intercept = false);
 
-  double coordinate_descent(RegFunction *regfunc, int idx);
+            double coordinate_descent(RegFunction *regfunc, int idx);
 
-  void intercept_update();
-  void update_gradient(int);
+            void intercept_update();
+            void update_gradient(int);
 
-  double get_local_change(double old, int idx);
-};
+            double get_local_change(double old, int idx);
+    };
 
-class LogisticObjective : public GLMObjective {
- public:
-  LogisticObjective(const double *xmat, const double *y, int n, int d,
-                    bool include_intercept = false);
+    class LogisticObjective : public GLMObjective {
+        public:
+            LogisticObjective(const double *xmat, const double *y, int n, int d,
+                                bool include_intercept = false);
 
-  void update_auxiliary();
+            void update_auxiliary();
 
-  double eval();
-};
+            double eval();
+    };
 
-class PoissonObjective : public GLMObjective {
- public:
-  PoissonObjective(const double *xmat, const double *y, int n, int d,
-                   bool include_intercept = false);
+    class PoissonObjective : public GLMObjective {
+        public:
+            PoissonObjective(const double *xmat, const double *y, int n, int d,
+                            bool include_intercept = false);
 
-  void update_auxiliary();
+            void update_auxiliary();
 
-  double eval();
-};
+            double eval();
+    };
 
-class SqrtMSEObjective : public ObjFunction {
- private:
-  Eigen::ArrayXd r;
+    class SqrtMSEObjective : public ObjFunction {
+        private:
+            Eigen::ArrayXd r;
 
-  // quadratic approx coefs for each coordinate
-  // a*x^2 + g*x + constant
-  double a, g;
-  double L;  // sqrt(MSE)
-  double sum_r;
-  double sum_r2;
+            // quadratic approx coefs for each coordinate
+            // a*x^2 + g*x + constant
+            double a, g;
+            double L;  // sqrt(MSE)
+            double sum_r;
+            double sum_r2;
 
- public:
-  SqrtMSEObjective(const double *xmat, const double *y, int n, int d,
-                   bool include_intercept = false);
+        public:
+            SqrtMSEObjective(const double *xmat, const double *y, int n, int d,
+                            bool include_intercept = false);
 
-  double coordinate_descent(RegFunction *regfunc, int idx);
+            double coordinate_descent(RegFunction *regfunc, int idx);
 
-  void intercept_update();
+            void intercept_update();
 
-  void update_auxiliary();
-  void update_gradient(int idx);
+            void update_auxiliary();
+            void update_gradient(int idx);
 
-  double get_local_change(double old, int idx);
+            double get_local_change(double old, int idx);
 
-  double eval();
-};
+            double eval();
+    };
 
-class GaussianNaiveUpdateObjective final : public ObjFunction {
- private:
-  Eigen::ArrayXd r, XX;
+    class GaussianNaiveUpdateObjective final : public ObjFunction {
+        private:
+            Eigen::ArrayXd r, XX;
 
- public:
-  GaussianNaiveUpdateObjective(const double *xmat, const double *y, int n,
-                               int d, bool include_intercept = false);
-  double coordinate_descent(RegFunction *regfunc, int idx);
+        public:
+            GaussianNaiveUpdateObjective(const double *xmat, const double *y, int n,
+                                        int d, bool include_intercept = false);
+            double coordinate_descent(RegFunction *regfunc, int idx);
 
-  void intercept_update();
-  void update_auxiliary();
-  void update_gradient(int idx);
+            void intercept_update();
+            void update_auxiliary();
+            void update_gradient(int idx);
 
-  double get_local_change(double old, int idx);
+            double get_local_change(double old, int idx);
 
-  double eval();
-};
+            double eval();
+    };
 
 }  // namespace picasso
 
